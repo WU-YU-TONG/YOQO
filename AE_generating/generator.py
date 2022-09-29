@@ -7,7 +7,6 @@ import argparse
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 
-
 std = [0.2673342858792401, 0.2564384629170883, 0.27615047132568404]
 mean = [0.5070751592371323, 0.48654887331495095, 0.4409178433670343]
 
@@ -309,7 +308,7 @@ def get_target():
     _cur_target = 0
     for ltnt_target in range(args.total_label_number):
         _first_flag = True
-        
+
         if ltnt_target == target_label:
             continue
 
@@ -351,9 +350,8 @@ def get_target():
 
 
 def generating_online_aes(ground_class, target_class, in_models, out_models):
-
     _first_flag = True
-    loss = None
+    _loss = None
     in_pred_list = []
     out_pred_list = []
     for iter in range(len(in_models)):
@@ -369,20 +367,19 @@ def generating_online_aes(ground_class, target_class, in_models, out_models):
         out_pred_list.append(out_preds.cpu().numpy()[0])
 
         if _first_flag:
-            print(0)
-            loss = loss_1 + args.alpha * loss_2
+            _loss = loss_1 + args.alpha * loss_2
+            print(_loss.item())
             _first_flag = False
         else:
             print(1)
-            loss += loss_1 + args.alpha * loss_2
-    
-    loss.backward()
+            _loss += loss_1 + args.alpha * loss_2
+
+    _loss.backward()
     print('in:{}, out:{}'.format(in_pred_list, out_pred_list))
-    return inp.grad.data, loss
+    return inp.grad.data, _loss
 
 
 def generating_offline_aes(target_class, in_models, out_models):
-
     _first_flag = True
     loss = 0
     in_pred_list = []
@@ -420,14 +417,14 @@ if __name__ == '__main__':
                         help='path of no-allocated data')
     parser.add_argument('-target_path_l', type=str, default='../shadow_dataset/test_labels.npy',
                         help='path of no-allocated labels')
-    parser.add_argument('-shadow_index', type=int, default=25, help='index of shadow dataset')
-    parser.add_argument('-train_amt', type=int, default=19, help='amount of generating models')
+    parser.add_argument('-shadow_index', type=int, default=16, help='index of shadow dataset')
+    parser.add_argument('-train_amt', type=int, default=11, help='amount of generating models')
     parser.add_argument('-state_path', type=str, default='../shadow_training/checkpoint/', help='path of state dict')
     parser.add_argument('-alpha', type=float, default=1, help='lambda balances loss')
-    parser.add_argument('-net', type=str, default='resnet18', help='shadow model type')
-    parser.add_argument('-test_net', type=str, default='resnet18', help='test shadow model type')
+    parser.add_argument('-net', type=str, default='vgg16', help='shadow model type')
+    parser.add_argument('-test_net', type=str, default='vgg16', help='test shadow model type')
     parser.add_argument('-if_targeted', type=int, default=True, help='if is targeted')
-    parser.add_argument('-target_index', type=int, default=30, help='target index number')
+    parser.add_argument('-target_index', type=int, default=3, help='target index number')
     parser.add_argument('-AE_path', type=str, default='./AE_{}/')
     parser.add_argument('-total_label_number', type=int, default=10, help='total numbers of labels')
 
@@ -450,6 +447,7 @@ if __name__ == '__main__':
     for target_index in range(args.target_index):
         target_data = np.load(args.target_path_d)[target_index]
         target_label = np.load(args.target_path_l)[target_index]
+        ground_label = np.load(args.target_path_l)[target_index]
 
         r = target_data[:1024].reshape(32, 32)
         g = target_data[1024:2048].reshape(32, 32)
@@ -476,22 +474,22 @@ if __name__ == '__main__':
 
             first_flag = True
 
-            for batch_number in range(int(args.shadow_index / args.model_batch)+1):
+            for batch_number in range(int(args.train_amt / args.model_batch) + 1):
 
                 in_nets = []
                 out_nets = []
 
                 batch_lower_bound = batch_number * args.model_batch
-                batch_upper_bound = (batch_lower_bound + args.model_batch) if batch_lower_bound + args.model_batch < args.train_amt else args.train_amt
-
+                batch_upper_bound = (
+                            batch_lower_bound + args.model_batch) if batch_lower_bound + args.model_batch < args.train_amt else args.train_amt
                 for i in range(batch_lower_bound, batch_upper_bound):
 
                     out_net = get_networks(args)
                     out_net.load_state_dict(torch.load(args.state_path + args.net +
                                                        '/out-0-{net_name}-120-{shadow_index}.pth'
                                                        .format(net_name=args.net, shadow_index=i)))
-                    print('reading' + args.state_path + args.net +
-                                                        '/out-0-{}-120-{}.pth'.format(args.net, i))
+                    # print('reading' + args.state_path + args.net +
+                    #       '/out-0-{}-120-{}.pth'.format(args.net, i))
 
                     if device != 'cpu':
                         out_net = out_net.cuda()
@@ -512,8 +510,8 @@ if __name__ == '__main__':
                     in_nets.append(in_net)
                     out_nets.append(out_net)
 
-
-                grad, loss = generating_online_aes(ground_class=target_label , target_class=target_clas, in_models=in_nets, out_models=out_nets)
+                grad, loss = generating_online_aes(ground_class=target_label, target_class=target_clas,
+                                                   in_models=in_nets, out_models=out_nets)
                 # grad, loss = generating_offline_aes(target_class=target_clas, in_models=in_nets, out_models=out_nets)
 
                 if not first_flag:
@@ -533,7 +531,7 @@ if __name__ == '__main__':
 
             out_net_t = get_test_networks(args)
             out_net_t.load_state_dict(torch.load(args.state_path + args.net +
-                                                 '/out-{target_index}-{net_name}-120-{shadow_index}.pth'
+                                                 '/out-0-{net_name}-120-{shadow_index}.pth'
                                                  .format(target_index=target_index,
                                                          net_name=args.net, shadow_index=i)))
 
@@ -569,9 +567,8 @@ if __name__ == '__main__':
                 test_FP += 1
 
         test_acc = (test_TP + test_TN) / (test_TP + test_FP + test_TN + test_FN) * 100
-        test_pre = test_TP / (test_FP + test_TP) * 100
-        test_rcl = test_TP / (test_TP + test_FN) * 100
+        test_pre = test_TP / (test_FP + test_TP + 0.001) * 100
+        test_rcl = test_TP / (test_TP + test_FN + 0.001) * 100
 
         print('test: ACC:{test_acc}, Precision:{test_pre}, test_rcl:{test_rcl}'
               .format(test_acc=test_acc, test_pre=test_pre, test_rcl=test_rcl))
-
