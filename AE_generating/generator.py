@@ -1,7 +1,6 @@
 import sys
 
 import numpy as np
-import cv2
 import torch
 import torch.nn as nn
 import argparse
@@ -310,36 +309,41 @@ def get_target():
     _cur_target = 0
     for ltnt_target in range(args.total_label_number):
         _first_flag = True
+        
+        if ltnt_target == target_label:
+            continue
+
+        ltnt_target = np.array([ltnt_target])
+        ltnt_target = torch.from_numpy(ltnt_target)
+        ltnt_target = ltnt_target.type(torch.LongTensor)
+        ltnt_target = ltnt_target.to(device)
         for _batch_number in range(int(args.shadow_index / args.model_batch) + 1):
             _in_nets = []
             _out_nets = []
-            _batch_lower_bound = batch_number * args.model_batch
-            _batch_upper_bound = (batch_lower_bound + args.model_batch) \
-                if batch_lower_bound + args.model_batch < args.shadow_index else args.shadow_index
+            _batch_lower_bound = _batch_number * args.model_batch
+            _batch_upper_bound = (_batch_lower_bound + args.model_batch) \
+                if _batch_lower_bound + args.model_batch < args.shadow_index else args.shadow_index
             for _i in range(_batch_lower_bound, _batch_upper_bound):
 
                 _out_net = get_networks(args)
                 _out_net.load_state_dict(torch.load(args.state_path + args.net +
-                                                    '/out-{target_index}-{net_name}-120-{shadow_index}.pth'
-                                                    .format(target_index=target_index,
-                                                            net_name=args.net, shadow_index=_i)))
+                                                    '/out-0-{net_name}-120-{shadow_index}.pth'
+                                                    .format(net_name=args.net, shadow_index=_i)))
 
                 if device != 'cpu':
                     _out_net = _out_net.cuda()
                 _out_net.eval()
                 _out_nets.append(_out_net)
 
-                for iter in range(len(_in_nets)):
-                    _out_model = _out_nets[iter]
-                    _out_output = _out_model(inp)
-                    _loss_2 = loss_function(_out_output, ltnt_target)
-
-                    if _first_flag:
-                        _loss = args.alpha * _loss_2.item()
-                        _first_flag = False
-                    else:
-                        _loss += args.alpha * _loss_2.item()
-
+            for iter in range(len(_out_nets)):
+                _out_model = _out_nets[iter]
+                _out_output = _out_model(inp)
+                _loss_2 = loss_function(_out_output, ltnt_target)
+                if _first_flag:
+                    _loss = args.alpha * _loss_2.item()
+                    _first_flag = False
+                else:
+                    _loss += args.alpha * _loss_2.item()
         _cur_target = ltnt_target if _cur_loss > _loss else _cur_target
         _cur_loss = _loss if _cur_loss > _loss else _cur_loss
 
@@ -361,25 +365,26 @@ def generating_online_aes(ground_class, target_class, in_models, out_models):
         _, out_preds = out_output.max(1)
         loss_1 = loss_function(in_output, ground_class)
         loss_2 = loss_function(out_output, target_class)
-        mse = mse_loss(inp, ori)
         in_pred_list.append(in_preds.cpu().numpy()[0])
         out_pred_list.append(out_preds.cpu().numpy()[0])
 
         if _first_flag:
+            print(0)
             loss = loss_1 + args.alpha * loss_2
             _first_flag = False
         else:
+            print(1)
             loss += loss_1 + args.alpha * loss_2
-
+    
     loss.backward()
+    print('in:{}, out:{}'.format(in_pred_list, out_pred_list))
     return inp.grad.data, loss
 
 
 def generating_offline_aes(target_class, in_models, out_models):
 
     _first_flag = True
-    loss = None
-    loss_1 = None
+    loss = 0
     in_pred_list = []
     out_pred_list = []
     for iter in range(len(out_models)):
@@ -401,7 +406,7 @@ def generating_offline_aes(target_class, in_models, out_models):
             loss += loss_1 + args.alpha * loss_2
 
     loss.backward()
-    print('in_label:{}\t, out_label:{}\t MSE_loss:{}'.format(in_pred_list, out_pred_list, loss_1.item()))
+    print('in_label:{}\t, out_label:{}'.format(in_pred_list, out_pred_list))
     return inp.grad.data, loss
 
 
@@ -416,13 +421,12 @@ if __name__ == '__main__':
     parser.add_argument('-target_path_l', type=str, default='../shadow_dataset/test_labels.npy',
                         help='path of no-allocated labels')
     parser.add_argument('-shadow_index', type=int, default=25, help='index of shadow dataset')
-    parser.add_argument('-train_amt', type=int, default=20, help='amount of generating models')
+    parser.add_argument('-train_amt', type=int, default=19, help='amount of generating models')
     parser.add_argument('-state_path', type=str, default='../shadow_training/checkpoint/', help='path of state dict')
     parser.add_argument('-alpha', type=float, default=1, help='lambda balances loss')
     parser.add_argument('-net', type=str, default='resnet18', help='shadow model type')
     parser.add_argument('-test_net', type=str, default='resnet18', help='test shadow model type')
     parser.add_argument('-if_targeted', type=int, default=True, help='if is targeted')
-    parser.add_argument('-target_class', type=int, default=9, help='target label, available when if_targeted is True')
     parser.add_argument('-target_index', type=int, default=30, help='target index number')
     parser.add_argument('-AE_path', type=str, default='./AE_{}/')
     parser.add_argument('-total_label_number', type=int, default=10, help='total numbers of labels')
@@ -441,7 +445,8 @@ if __name__ == '__main__':
     test_FN = 0
     ground_label = 0
     targeted_label = 0
-
+    loss_function = nn.CrossEntropyLoss()
+    mse_loss = nn.MSELoss()
     for target_index in range(args.target_index):
         target_data = np.load(args.target_path_d)[target_index]
         target_label = np.load(args.target_path_l)[target_index]
@@ -455,19 +460,15 @@ if __name__ == '__main__':
         inp = Variable(inp.type(torch.FloatTensor).to(device).unsqueeze(0), requires_grad=True)
         ori = inp.clone()
 
-        target = get_target()
-        target_clas = np.array([target])
-        target_clas = torch.from_numpy(target_clas)
-        target_clas = target_clas.type(torch.LongTensor)
-        target_clas = target_clas.to(device)
+        target_clas = get_target()
+
+        print('Ground label:{}\t Target label:{}'.format(target_label, target_clas.item()))
 
         target_label = np.array([target_label])
         target_label = torch.from_numpy(target_label)
         target_label = target_label.type(torch.LongTensor)
         target_label = target_label.to(device)
 
-        loss_function = nn.CrossEntropyLoss()
-        mse_loss = nn.MSELoss()
         AE_grad = None
         AE_loss = None
 
@@ -481,17 +482,16 @@ if __name__ == '__main__':
                 out_nets = []
 
                 batch_lower_bound = batch_number * args.model_batch
-                batch_upper_bound = (batch_lower_bound + args.model_batch) if batch_lower_bound + args.model_batch < args.shadow_index else args.shadow_index
+                batch_upper_bound = (batch_lower_bound + args.model_batch) if batch_lower_bound + args.model_batch < args.train_amt else args.train_amt
 
                 for i in range(batch_lower_bound, batch_upper_bound):
 
                     out_net = get_networks(args)
                     out_net.load_state_dict(torch.load(args.state_path + args.net +
-                                                       '/out-{target_index}-{net_name}-120-{shadow_index}.pth'
-                                                       .format(target_index=target_index,
-                                                               net_name=args.net, shadow_index=i)))
-                    # print('reading' + args.state_path + args.net +
-                    #                                    '/out-0-{}-120-{}.pth'.format(args.net, i))
+                                                       '/out-0-{net_name}-120-{shadow_index}.pth'
+                                                       .format(net_name=args.net, shadow_index=i)))
+                    print('reading' + args.state_path + args.net +
+                                                        '/out-0-{}-120-{}.pth'.format(args.net, i))
 
                     if device != 'cpu':
                         out_net = out_net.cuda()
