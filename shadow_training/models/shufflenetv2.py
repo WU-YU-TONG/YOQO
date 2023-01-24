@@ -150,8 +150,8 @@ class ShuffleNetV2(nn.Module):
 
         return nn.Sequential(*layers)
 
-def shufflenetv2():
-    return ShuffleNetV2()
+def shufflenetv2(num_cls=10):
+    return ShuffleNetV2(class_num=num_cls)
 
 
 

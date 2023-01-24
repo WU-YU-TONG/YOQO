@@ -99,6 +99,6 @@ class WideResNet(nn.Module):
 
 
 # Table 9: Best WRN performance over various datasets, single run results.
-def wideresnet(depth=40, widen_factor=10):
-    net = WideResNet(100, WideBasic, depth=depth, widen_factor=widen_factor)
+def wideresnet(depth=40, widen_factor=10, num_cls=10):
+    net = WideResNet(100, WideBasic, depth=depth, widen_factor=widen_factor, num_classes=num_cls)
     return net

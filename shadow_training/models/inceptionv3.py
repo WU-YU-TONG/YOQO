@@ -328,8 +328,8 @@ class InceptionV3(nn.Module):
         return x
 
 
-def inceptionv3():
-    return InceptionV3()
+def inceptionv3(num_cls=10):
+    return InceptionV3(num_classes=num_cls)
 
 
 

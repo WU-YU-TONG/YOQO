@@ -221,7 +221,7 @@ class Xception(nn.Module):
 
         return x
 
-def xception():
-    return Xception(MiddleFLowBlock)
+def xception(num_cls=10):
+    return Xception(MiddleFLowBlock, num_class=num_cls)
 
 

@@ -1,7 +1,3 @@
-""" configurations for this project
-
-author baiyu
-"""
 import os
 from datetime import datetime
 
@@ -16,23 +12,51 @@ CIFAR100_TRAIN_STD = (0.2673342858792401, 0.2564384629170883, 0.2761504713256840
 #CIFAR100_TEST_STD = (0.2682515741720801, 0.2573637364478126, 0.2770957707973042)
 
 #directory to save weights file
-CHECKPOINT_PATH = 'checkpoint2500'
+CHECKPOINT_PATH = './checkpoint/{dataset}/{data_size}/'
+ONLINE_AE_PATH = './AE_Online/{dataset}/{data_size}/{net}/'
+OFFLINE_AE_PATH = './AE_Offline/{dataset}/{data_size}/{net}/'
+
+SHADOW_DATA_PATH = '../shadow_dataset/{dataset}/{data_size}/shadow_data_{shadow_index}.npy'
+SHADOW_LABELS_PATH = '../shadow_dataset/{dataset}/{data_size}/shadow_labels_{shadow_index}.npy'
+TARGET_DATA_PATH = '../shadow_dataset/{dataset}/{data_size}/target_data.npy'
+TARGET_LABELS_PATH = '../shadow_dataset/{dataset}/{data_size}/target_labels.npy'
+TEST_DATA_PATH = '../shadow_dataset/{dataset}/test_data.npy'
+TEST_LABELS_PATH = '../shadow_dataset/{dataset}/test_labels.npy'
+
+#dataset config
+DATASET_CFG = {
+    'CIFAR10':{'model': 'image_model', 'num_cls': 10, 'input_dim': (32, 32, 3)},
+    'CIFAR100':{'model': 'image_model', 'num_cls': 100, 'input_dim': (32, 32, 3)},
+    'gtsrb':{'model': 'image_model', 'num_cls': 43, 'input_dim': (32, 32, 3)},
+    'svhn':{'model': 'image_model', 'num_cls': 10, 'input_dim': (32, 32, 3)},
+    'texas100': {'model': 'ColumnFC', 'num_cls': 100, 'input_dim': 6169},
+    'location': {'model': 'ColumnFC', 'num_cls': 30, 'input_dim': 446},
+    'purchase100': {'model': 'ColumnFC', 'num_cls': 100, 'input_dim': 600}
+}
+
+
 
 #total training epoches
-EPOCH = 120
-MILESTONES = [40, 80]
-#initial learning rate
-#INIT_LR = 0.1
+EPOCH = {'ColumnFC': 30,
+         'CNN7': 30,
+         'resnet18': 20,
+         'densenet121': 30,
+         'vgg16': 50,
+         'inceptionv3': 25,
+         'seresnet18': 20}
+ADV_TOTAL_EPOCH = 50
+ADV_TUNING_LR = 0.001
+MILESTONES = [20, 40]
 
-DATE_FORMAT = '%A_%d_%B_%Y_%Hh_%Mm_%Ss'
-#time of we run the script
-TIME_NOW = datetime.now().strftime(DATE_FORMAT)
 
-#tensorboard log dir
-LOG_DIR = 'runs'
+#settings for experiment
+MODEL_LIST = ['vgg16', 'resnet18', 'CNN7', 'densenet121', 'inceptionv3', 'seresnet18']
+TEST_MODEL_LIST = ['vgg16', 'resnet18', 'CNN7', 'densenet121', 'inceptionv3', 'seresnet18']
+PER_MODEL_NUM = 4
+ALPHA_LIST = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0, 1.2, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+TRAIN_AMT_LIST = [1, 2, 4, 8, 16, 32]
 
-#save weights file per SAVE_EPOCH epoch
-SAVE_EPOCH = 120
+
 
 
 

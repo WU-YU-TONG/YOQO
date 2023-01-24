@@ -114,18 +114,18 @@ class PreActResNet(nn.Module):
 
         return x
 
-def preactresnet18():
-    return PreActResNet(PreActBasic, [2, 2, 2, 2])
+def preactresnet18(num_cls=10):
+    return PreActResNet(PreActBasic, [2, 2, 2, 2], class_num=num_cls)
 
-def preactresnet34():
-    return PreActResNet(PreActBasic, [3, 4, 6, 3])
+def preactresnet34(num_cls=10):
+    return PreActResNet(PreActBasic, [3, 4, 6, 3], class_num=num_cls)
 
-def preactresnet50():
-    return PreActResNet(PreActBottleNeck, [3, 4, 6, 3])
+def preactresnet50(num_cls=10):
+    return PreActResNet(PreActBottleNeck, [3, 4, 6, 3], class_num=num_cls)
 
-def preactresnet101():
-    return PreActResNet(PreActBottleNeck, [3, 4, 23, 3])
+def preactresnet101(num_cls=10):
+    return PreActResNet(PreActBottleNeck, [3, 4, 23, 3], class_num=num_cls)
 
-def preactresnet152():
-    return PreActResNet(PreActBottleNeck, [3, 8, 36, 3])
+def preactresnet152(num_cls=10):
+    return PreActResNet(PreActBottleNeck, [3, 8, 36, 3], class_num=num_cls)
 

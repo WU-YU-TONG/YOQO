@@ -543,8 +543,8 @@ class InceptionResNetV2(nn.Module):
 
         return layers
 
-def inceptionv4():
-    return InceptionV4(4, 7, 3)
+def inceptionv4(num_cls=10):
+    return InceptionV4(4, 7, 3, class_nums=num_cls)
 
-def inception_resnet_v2():
-    return InceptionResNetV2(5, 10, 5)
+def inception_resnet_v2(num_cls=10):
+    return InceptionResNetV2(5, 10, 5, class_nums=num_cls)

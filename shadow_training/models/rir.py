@@ -171,5 +171,5 @@ class ResnetInResneet(nn.Module):
                 m.bias.data.fill_(0.01)
 
 
-def resnet_in_resnet():
-    return ResnetInResneet()
+def resnet_in_resnet(num_cls=10):
+    return ResnetInResneet(num_classes=num_cls)

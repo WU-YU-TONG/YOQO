@@ -93,5 +93,5 @@ class SqueezeNet(nn.Module):
 
         return x
 
-def squeezenet(class_num=100):
+def squeezenet(class_num=10):
     return SqueezeNet(class_num=class_num)
