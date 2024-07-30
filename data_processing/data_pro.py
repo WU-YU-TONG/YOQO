@@ -30,7 +30,7 @@ if DATA_SET == 'CIFAR10' or DATA_SET == 'CIFAR100':
         lists = list(range(0,1000,2))
         c = a[lists]
         d = b[lists]
-        lists = rd.sample(range(50000), DATA_SIZE - 200)
+        lists = rd.sample(range(50000), DATA_SIZE - 500)
         ap = e[lists]
         bp = f[lists]
         c = np.concatenate((c, ap), axis=0)
