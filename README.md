@@ -3,7 +3,7 @@ This is the official code for paper _You Only Query Once: An Efficient Label-Onl
 
 The code only requires the pytorch library to run.
 
-Get the dataset we use during the experiment for a quick start via the [link]([https://www.openai.com](https://entuedu-my.sharepoint.com/:u:/g/personal/yutong002_e_ntu_edu_sg/EYSqHo56ZWhJtjlCq4ttDVgBKO9WryXPz8trQfIB-2O21A?e=Le1Ry1)) download the zip file and run
+Get the dataset we use during the experiment for a quick start via the [link]([https://www.openai.com](https://entuedu-my.sharepoint.com/:u:/g/personal/yutong002_e_ntu_edu_sg/EYSqHo56ZWhJtjlCq4ttDVgBKO9WryXPz8trQfIB-2O21A?e=Le1Ry1) download the zip file and run
 
 ```
 cd shadow_training
