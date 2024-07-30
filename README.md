@@ -11,6 +11,8 @@ cd ..
 unzip shadow_dataset.zip -d shadow_dataset
 ```
 
+The 'shadow_dataset' should be under the same directory as the 'shadow_training' dataset. 
+
 Get the victim models and the attack samples we used via the [link](https://entuedu-my.sharepoint.com/:u:/g/personal/yutong002_e_ntu_edu_sg/EZruADtZVb9AuWQmPmNg0eIBXXokHg2ykZPeLinaZA0dQg?e=nNkqEN) and run
 
 ```
