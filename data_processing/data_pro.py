@@ -27,9 +27,7 @@ if DATA_SET == 'CIFAR10' or DATA_SET == 'CIFAR100':
     f = np.load(os.path.join(DATA_DIR, 'train_labels.npy'))
 
     for i in range(5):
-        lists = rd.sample(range(400), 200)
-        member_label = np.zeros(400)
-        member_label[lists] = 1
+        lists = list(range(0,1000,2))
         c = a[lists]
         d = b[lists]
         lists = rd.sample(range(50000), DATA_SIZE - 200)
@@ -37,8 +35,6 @@ if DATA_SET == 'CIFAR10' or DATA_SET == 'CIFAR100':
         bp = f[lists]
         c = np.concatenate((c, ap), axis=0)
         d = np.concatenate((d, bp), axis=0)
-        print(c.shape)
-        np.save(SAVE_DIR + '/member_labels_{}.npy'.format(i), member_label)
         np.save(SAVE_DIR + '/target_data_{}.npy'.format(i), c)
         np.save(SAVE_DIR + '/target_labels_{}.npy'.format(i), d)
 
