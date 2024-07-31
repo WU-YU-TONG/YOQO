@@ -10,29 +10,27 @@ if not os.path.exists(SAVE_DIR):
     os.makedirs(SAVE_DIR)
 
 if DATA_SET == 'CIFAR10' or DATA_SET == 'CIFAR100':
-    # a = np.load(os.path.join(DATA_DIR, 'train_data.npy'))
-    # b = np.load(os.path.join(DATA_DIR, 'train_labels.npy'))
-    # print(a.shape)
-    # for i in range(SHADOW_AMT):
-    #     lists = rd.sample(range(50000), DATA_SIZE)
-    #     # lists = list(range(0,3000,2))
-    #     c = a[lists]
-    #     d = b[lists]
-    #     np.save(SAVE_DIR + '/shadow_data_{i}.npy'.format(i=i), c)
-    #     np.save(SAVE_DIR + '/shadow_labels_{i}.npy'.format(i=i), d)
+    a = np.load(os.path.join(DATA_DIR, 'train_data.npy'))
+    b = np.load(os.path.join(DATA_DIR, 'train_labels.npy'))
+    print(a.shape)
+    for i in range(SHADOW_AMT):
+        lists = rd.sample(range(50000), DATA_SIZE)
+        # lists = list(range(0,3000,2))
+        c = a[lists]
+        d = b[lists]
+        np.save(SAVE_DIR + '/shadow_data_{i}.npy'.format(i=i), c)
+        np.save(SAVE_DIR + '/shadow_labels_{i}.npy'.format(i=i), d)
 
     a = np.load(os.path.join(DATA_DIR, 'test_data.npy'))
     b = np.load(os.path.join(DATA_DIR, 'test_labels.npy'))
-    e = np.load(os.path.join(DATA_DIR, 'train_data.npy'))
-    f = np.load(os.path.join(DATA_DIR, 'train_labels.npy'))
 
     for i in range(5):
         lists = list(range(0,1000,2))
         c = a[lists]
         d = b[lists]
-        lists = rd.sample(range(50000), DATA_SIZE - 500)
-        ap = e[lists]
-        bp = f[lists]
+        lists = rd.sample(range(1000, 10000), DATA_SIZE - 500)
+        ap = a[lists]
+        bp = b[lists]
         c = np.concatenate((c, ap), axis=0)
         d = np.concatenate((d, bp), axis=0)
         np.save(SAVE_DIR + '/target_data_{}.npy'.format(i), c)
